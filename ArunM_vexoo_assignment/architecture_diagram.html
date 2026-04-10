@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vexoo Assignment — Architecture Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0d14;
+    --surface: #111623;
+    --card: #161d2e;
+    --border: rgba(255,255,255,0.06);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+
+    --blue:    #3b82f6;
+    --indigo:  #6366f1;
+    --purple:  #a855f7;
+    --pink:    #ec4899;
+    --rose:    #f43f5e;
+    --orange:  #f97316;
+    --yellow:  #eab308;
+    --green:   #22c55e;
+    --teal:    #14b8a6;
+    --cyan:    #06b6d4;
+    --sky:     #0ea5e9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ─── Starfield ─────────────────────────── */
+  canvas#stars {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+    opacity: .35;
+  }
+
+  .page { position: relative; z-index: 1; padding: 48px 32px 80px; max-width: 1400px; margin: 0 auto; }
+
+  /* ─── Title ──────────────────────────────── */
+  .hero {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #3b82f620, #a855f720);
+    border: 1px solid #3b82f640;
+    border-radius: 100px;
+    padding: 6px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .hero p { color: var(--muted); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+
+  /* ─── Section Labels ──────────────────────── */
+  .section-label {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ─── Cards ───────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .25s, box-shadow .25s;
+  }
+  .card:hover { transform: translateY(-3px); }
+  .card::before {
+    content:''; position:absolute; inset:0; opacity:0;
+    transition: opacity .3s;
+    border-radius: inherit;
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 16px 16px 0 0; }
+  .card-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; margin-bottom: 14px; }
+  .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .card-sub { font-size: .78rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* ─── System Overview Grid ────────────────── */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  @media(max-width:900px){ .overview-grid { grid-template-columns: 1fr 1fr; } }
+
+  /* ─── Arrow rows ──────────────────────────── */
+  .arrow-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px; margin: 8px 0; color: var(--muted); font-size: 22px;
+  }
+  .arrow-row svg { animation: bounce-arrow 1.4s ease-in-out infinite; }
+  @keyframes bounce-arrow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+
+  /* ─── Flow Diagram ────────────────────────── */
+  .flow-wrapper { overflow-x: auto; padding-bottom: 8px; }
+
+  .flow {
+    display: flex; align-items: flex-start; gap: 0;
+    min-width: 800px;
+  }
+  .flow-step {
+    display: flex; flex-direction: column; align-items: center;
+    flex: 1;
+  }
+  .flow-node {
+    padding: 14px 16px; border-radius: 12px; border: 1px solid;
+    font-size: .78rem; font-weight: 600; text-align: center;
+    width: 100%; min-height: 64px; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; cursor: default;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .flow-node:hover { transform: scale(1.04); }
+  .flow-node .fn-label { font-size: .65rem; font-family: 'JetBrains Mono', monospace; opacity: .75; }
+
+  .flow-connector {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding-top: 24px; width: 40px; flex-shrink: 0;
+  }
+  .flow-line { width: 2px; height: 24px; }
+  .flow-arrow-head { font-size: 18px; margin-top: -4px; }
+
+  /* ─── Pyramid ─────────────────────────────── */
+  .pyramid-wrap { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .pyramid-layer {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 10px; border: 1px solid;
+    padding: 12px 20px; width: 100%;
+    transition: transform .2s;
+  }
+  .pyramid-layer:hover { transform: translateX(6px); }
+  .pyramid-icon { font-size: 22px; }
+  .pyramid-layer-title { font-size: .85rem; font-weight: 700; }
+  .pyramid-layer-desc { font-size: .75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .pyramid-layer-value { margin-left: auto; font-size: .75rem; font-family: 'JetBrains Mono', monospace; padding: 3px 10px; border-radius: 6px; font-weight: 600; }
+
+  /* ─── Variable Table ──────────────────────── */
+  .var-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+  .var-table th {
+    text-align: left; padding: 10px 14px;
+    font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+  .var-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .var-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .var-table .mono { font-family: 'JetBrains Mono', monospace; font-size: .72rem; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: .68rem; font-weight: 700; }
+
+  /* ─── Routing diagram ─────────────────────── */
+  .router-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; }
+  .domain-cards { display: flex; flex-direction: column; gap: 10px; }
+  .domain-card {
+    border-radius: 10px; border: 1px solid; padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+    transition: transform .2s;
+  }
+  .domain-card:hover { transform: translateX(6px); }
+  .domain-kw { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .kw-chip { font-size: .62rem; padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .router-center { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .router-box {
+    border-radius: 14px; border: 2px solid; padding: 20px 24px;
+    text-align: center;
+  }
+  .router-title { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+  .router-sub { font-size: .72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .dispatch-cards { display: flex; flex-direction: column; gap: 10px; }
+  .dispatch-card {
+    border-radius: 10px; border: 1px solid; padding: 10px 16px;
+    transition: transform .2s;
+  }
+  .dispatch-card:hover { transform: translateX(-6px); }
+
+  /* ─── Training pipeline ───────────────────── */
+  .train-flow { display: flex; align-items: center; gap: 0; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; }
+  .train-node {
+    flex-shrink: 0; border-radius: 12px; border: 1px solid;
+    padding: 16px 14px; text-align: center; min-width: 130px;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .train-node:hover { transform: translateY(-4px); }
+  .train-icon { font-size: 26px; margin-bottom: 6px; }
+  .train-label { font-size: .78rem; font-weight: 700; }
+  .train-sub { font-size: .65rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .train-arrow { flex-shrink: 0; padding: 0 8px; color: var(--muted); font-size: 22px; display: flex; align-items: center; }
+
+  /* ─── Config grid ─────────────────────────── */
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media(max-width:800px){ .config-grid { grid-template-columns: 1fr; } }
+  .config-block { border-radius: 12px; border: 1px solid; padding: 20px; }
+  .config-block-title { font-size: .78rem; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .08em; }
+  .config-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .75rem; }
+  .config-row:last-child { border: none; }
+  .config-key { color: var(--muted); }
+  .config-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+  /* ─── Score weights ───────────────────────── */
+  .weight-bar-wrap { margin-top: 12px; }
+  .weight-bar-row { margin-bottom: 10px; }
+  .weight-bar-label { display: flex; justify-content: space-between; font-size: .75rem; margin-bottom: 4px; }
+  .weight-bar-track { height: 10px; border-radius: 10px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .weight-bar-fill { height: 100%; border-radius: 10px; }
+
+  /* ─── Section gaps ────────────────────────── */
+  .section { margin-bottom: 56px; }
+
+  /* ─── Legend ──────────────────────────────── */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ─── Glow pulses ─────────────────────────── */
+  @keyframes glow-pulse {
+    0%,100%{ box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+    50%{ box-shadow: 0 0 24px 4px rgba(99,102,241,.25); }
+  }
+  .glow-indigo { animation: glow-pulse 3s ease-in-out infinite; }
+
+  /* ─── Top-level flow connectors ──────────────── */
+  .tl-flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .tl-row { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: center; gap: 8px; width: 100%; }
+  .tl-vert { display: flex; justify-content: center; width: 100%; padding: 4px 0; }
+  .tl-connector { display: flex; flex-direction: column; align-items: center; }
+  .tl-line-v { width: 2px; height: 32px; }
+  .tl-line-h { height: 2px; width: 100%; }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<div class="page">
+
+  <!-- ══ HERO ════════════════════════════════════════════════ -->
+  <div class="hero">
+    <div class="hero-badge">🏗️ Vexoo Labs · AI Engineer Assignment</div>
+    <h1>Complete Architecture Diagram</h1>
+    <p>Full visual breakdown of every module, variable, data flow, and configuration in the project.</p>
+  </div>
+
+
+  <!-- ══ SECTION 1 · SYSTEM OVERVIEW ════════════════════════ -->
+  <div class="section">
+    <div class="section-label" style="color:#60a5fa">⬡ System Overview — 4 Modules</div>
+
+    <div class="overview-grid">
+      <!-- Part 1 -->
+      <div class="card" style="border-color:#3b82f630; box-shadow:0 0 40px #3b82f610">
+        <div class="card-accent" style="background:linear-gradient(90deg,#3b82f6,#06b6d4)"></div>
+        <div class="card-icon" style="background:#3b82f615; color:#60a5fa">📚</div>
+        <div class="card-title">document_ingestion.py</div>
+        <div class="card-sub">Part 1 Core</div>
+        <div style="margin-top:12px;font-size:.75rem;color:var(--muted);line-height:1.6">
+          Sliding-window chunker → 4-layer Knowledge Pyramid → weighted retrieval engine
+        </div>
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge" style="background:#3b82f620;color:#60a5fa">123 lines</span>
+          <span class="badge" style="background:#06b6d420;color:#22d3ee">stdlib only</span>
+        </div>
+      </div>
+
+      <!-- retrieval -->
+      <div class="card" style="border-color:#06b6d430; box-shadow:0 0 40px #06b6d410">
+        <div class="card-accent" style="background:linear-gradient(90deg,#06b6d4,#14b8a6)"></div>
+        <div class="card-icon" style="background:#06b6d415; color:#22d3ee">🔍</div>
+        <div class="card-title">retrieval.py</div>
+        <div class="card-sub">Part 1 Interface</div>
+        <div style="margin-top:12px;font-size:.75rem;color:var(--muted);line-height:1.6">
+          Public query API — wraps build_pyramid + retrieve with pretty-print output
+        </div>
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge" style="background:#06b6d420;color:#22d3ee">34 lines</span>
+          <span class="badge" style="background:#14b8a620;color:#2dd4bf">top_k=3</span>
+        </div>
+      </div>
+
+      <!-- Part 2 -->
+      <div class="card" style="border-color:#a855f730; box-shadow:0 0 40px #a855f710">
+        <div class="card-accent" style="background:linear-gradient(90deg,#a855f7,#ec4899)"></div>
+        <div class="card-icon" style="background:#a855f715; color:#c084fc">🤖</div>
+        <div class="card-title">colab_training_standalone.py</div>
+        <div class="card-sub">Part 2 · Fine-Tuning</div>
+        <div style="margin-top:12px;font-size:.75rem;color:var(--muted);line-height:1.6">
+          GSM8K dataset → 4-bit LLaMA-3.2-1B → LoRA (r=16) → SFTTrainer → evaluate
+        </div>
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge" style="background:#a855f720;color:#c084fc">145 lines</span>
+          <span class="badge" style="background:#ec489920;color:#f472b6">Colab GPU</span>
+        </div>
+      </div>
+
+      <!-- Bonus -->
+      <div class="card" style="border-color:#f9731630; box-shadow:0 0 40px #f9731610">
+        <div class="card-accent" style="background:linear-gradient(90deg,#f97316,#eab308)"></div>
+        <div class="card-icon" style="background:#f9731615; color:#fb923c">🧠</div>
+        <div class="card-title">reasoning_adapter.py</div>
+        <div class="card-sub">Bonus · Domain Router</div>
+        <div style="margin-top:12px;font-size:.75rem;color:var(--muted);line-height:1.6">
+          Keyword-scored domain detection → routes to Math / Legal / Science / General reasoner
+        </div>
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge" style="background:#f9731620;color:#fb923c">105 lines</span>
+          <span class="badge" style="background:#eab30820;color:#fbbf24">4 domains</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ SECTION 2 · DOCUMENT INGESTION PIPELINE ═══════════ -->
+  <div class="section">
+    <div class="section-label" style="color:#60a5fa">📚 Part 1 — Document Ingestion & Retrieval Pipeline</div>
+
+    <!-- Flow nodes -->
+    <div class="flow-wrapper">
+      <div class="flow">
+
+        <div class="flow-step">
+          <div class="flow-node" style="background:#3b82f615;border-color:#3b82f650;color:#93c5fd">
+            📄 Raw Text
+            <span class="fn-label">text: str</span>
+          </div>
+        </div>
+
+        <div class="flow-connector">
+          <div class="flow-line" style="background:linear-gradient(#3b82f6,#06b6d4)"></div>
+          <div class="flow-arrow-head" style="color:#06b6d4">▼</div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-node" style="background:#06b6d415;border-color:#06b6d450;color:#67e8f9">
+            🪟 sliding_window()
+            <span class="fn-label">window=2500 · overlap=500</span>
+          </div>
+        </div>
+
+        <div class="flow-connector">
+          <div class="flow-line" style="background:linear-gradient(#06b6d4,#14b8a6)"></div>
+          <div class="flow-arrow-head" style="color:#14b8a6">▼</div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-node" style="background:#14b8a615;border-color:#14b8a650;color:#5eead4">
+            🏔️ build_pyramid()
+            <span class="fn-label">list[dict] · 4 layers each</span>
+          </div>
+        </div>
+
+        <div class="flow-connector">
+          <div class="flow-line" style="background:linear-gradient(#14b8a6,#6366f1)"></div>
+          <div class="flow-arrow-head" style="color:#6366f1">▼</div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-node" style="background:#6366f115;border-color:#6366f150;color:#a5b4fc">
+            🎯 retrieve()
+            <span class="fn-label">query + pyramid → top_k=3</span>
+          </div>
+        </div>
+
+        <div class="flow-connector">
+          <div class="flow-line" style="background:linear-gradient(#6366f1,#a855f7)"></div>
+          <div class="flow-arrow-head" style="color:#a855f7">▼</div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-node" style="background:#a855f715;border-color:#a855f750;color:#d8b4fe">
+            📊 Results
+            <span class="fn-label">{chunk_id, score, category, summary}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="height:32px"></div>
+
+    <!-- Pyramid Layers -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+
+      <div>
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Knowledge Pyramid — 4 Layers per Chunk</div>
+        <div class="pyramid-wrap">
+          <div class="pyramid-layer" style="background:#3b82f610;border-color:#3b82f640">
+            <div class="pyramid-icon">📝</div>
+            <div>
+              <div class="pyramid-layer-title" style="color:#60a5fa">layer_raw()</div>
+              <div class="pyramid-layer-desc">chunk.strip() → full text</div>
+            </div>
+            <div class="pyramid-layer-value" style="background:#3b82f620;color:#93c5fd">raw: str</div>
+          </div>
+          <div class="pyramid-layer" style="background:#06b6d410;border-color:#06b6d440">
+            <div class="pyramid-icon">💬</div>
+            <div>
+              <div class="pyramid-layer-title" style="color:#22d3ee">layer_summary()</div>
+              <div class="pyramid-layer-desc">first n_sentences=3 sentences</div>
+            </div>
+            <div class="pyramid-layer-value" style="background:#06b6d420;color:#67e8f9">summary: str</div>
+          </div>
+          <div class="pyramid-layer" style="background:#f9731610;border-color:#f9731640">
+            <div class="pyramid-icon">🏷️</div>
+            <div>
+              <div class="pyramid-layer-title" style="color:#fb923c">layer_category()</div>
+              <div class="pyramid-layer-desc">rule-based keyword → domain label</div>
+            </div>
+            <div class="pyramid-layer-value" style="background:#f9731620;color:#fdba74">category: str</div>
+          </div>
+          <div class="pyramid-layer" style="background:#a855f710;border-color:#a855f740">
+            <div class="pyramid-icon">🔑</div>
+            <div>
+              <div class="pyramid-layer-title" style="color:#c084fc">layer_distilled()</div>
+              <div class="pyramid-layer-desc">top_n=8 TF keywords (no stopwords)</div>
+            </div>
+            <div class="pyramid-layer-value" style="background:#a855f720;color:#d8b4fe">distilled: list[str]</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Retrieval Scoring Formula</div>
+        <div class="card" style="border-color:#6366f130">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.85rem;color:#a5b4fc;margin-bottom:18px;line-height:1.8">
+            combined =<br>
+            &nbsp;&nbsp;<span style="color:#22d3ee">0.4</span> × s_summary<br>
+            &nbsp;+ <span style="color:#c084fc">0.4</span> × s_distilled<br>
+            &nbsp;+ <span style="color:#fb923c">0.2</span> × s_raw
+          </div>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar-row">
+              <div class="weight-bar-label">
+                <span style="color:#22d3ee">_fuzzy_score(query, summary)</span>
+                <span style="color:#22d3ee;font-family:'JetBrains Mono',monospace">40%</span>
+              </div>
+              <div class="weight-bar-track">
+                <div class="weight-bar-fill" style="width:40%;background:linear-gradient(90deg,#06b6d4,#3b82f6)"></div>
+              </div>
+            </div>
+            <div class="weight-bar-row">
+              <div class="weight-bar-label">
+                <span style="color:#c084fc">_keyword_score(query, distilled)</span>
+                <span style="color:#c084fc;font-family:'JetBrains Mono',monospace">40%</span>
+              </div>
+              <div class="weight-bar-track">
+                <div class="weight-bar-fill" style="width:40%;background:linear-gradient(90deg,#a855f7,#6366f1)"></div>
+              </div>
+            </div>
+            <div class="weight-bar-row">
+              <div class="weight-bar-label">
+                <span style="color:#fb923c">_fuzzy_score(query, raw[:500])</span>
+                <span style="color:#fb923c;font-family:'JetBrains Mono',monospace">20%</span>
+              </div>
+              <div class="weight-bar-track">
+                <div class="weight-bar-fill" style="width:20%;background:linear-gradient(90deg,#f97316,#eab308)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:16px"></div>
+        <div class="card" style="border-color:#f9731630">
+          <div style="font-size:.78rem;font-weight:700;color:#fb923c;margin-bottom:10px">Category Classification (6 Domains)</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;font-size:.72rem">
+              <span style="color:#60a5fa">📐 Mathematics</span><span class="mono" style="color:var(--muted)">equation, formula, algebra…</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.72rem">
+              <span style="color:#22d3ee">🧪 Science</span><span class="mono" style="color:var(--muted)">experiment, molecule, physics…</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.72rem">
+              <span style="color:#f472b6">⚖️ Legal</span><span class="mono" style="color:var(--muted)">law, contract, jurisdiction…</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.72rem">
+              <span style="color:#a78bfa">💻 Technology</span><span class="mono" style="color:var(--muted)">algorithm, model, dataset…</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.72rem">
+              <span style="color:#fbbf24">📜 History</span><span class="mono" style="color:var(--muted)">century, war, civilization…</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.72rem">
+              <span style="color:#34d399">🏥 Healthcare</span><span class="mono" style="color:var(--muted)">patient, diagnosis, treatment…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══ SECTION 3 · ALL VARIABLES — PART 1 ════════════════ -->
+  <div class="section">
+    <div class="section-label" style="color:#22d3ee">🔢 All Variables & Values — document_ingestion.py</div>
+    <div class="card" style="border-color:#06b6d430">
+      <table class="var-table">
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Type</th>
+            <th>Value</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono" style="color:#67e8f9">window_size</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">2500</td><td style="color:var(--muted)">Characters per chunk window</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">overlap</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">500</td><td style="color:var(--muted)">Characters shared between consecutive windows</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">n_sentences</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">3</td><td style="color:var(--muted)">Sentences kept in summary layer</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">top_n</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">8</td><td style="color:var(--muted)">Top-N keywords retained in distilled layer</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">top_k</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">3</td><td style="color:var(--muted)">Number of retrieval results returned</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">start</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">0 → += (2500-500)</td><td style="color:var(--muted)">Sliding window cursor position</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">end</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">start + 2500</td><td style="color:var(--muted)">End index of current window</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">chunks</td><td><span class="badge" style="background:#a855f720;color:#d8b4fe">list[str]</span></td><td class="mono" style="color:#fbbf24">sliding_window(text)</td><td style="color:var(--muted)">All raw text windows</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">chunk_id</td><td><span class="badge" style="background:#3b82f620;color:#93c5fd">int</span></td><td class="mono" style="color:#fbbf24">enumerate index</td><td style="color:var(--muted)">Positional ID of chunk in pyramid</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">pyramid</td><td><span class="badge" style="background:#a855f720;color:#d8b4fe">list[dict]</span></td><td class="mono" style="color:#fbbf24">build_pyramid(text)</td><td style="color:var(--muted)">Full knowledge pyramid data structure</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">stopwords</td><td><span class="badge" style="background:#a855f720;color:#d8b4fe">set[str]</span></td><td class="mono" style="color:#fbbf24">38 common words</td><td style="color:var(--muted)">Excluded from keyword extraction</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">freq</td><td><span class="badge" style="background:#06b6d420;color:#67e8f9">dict[str,int]</span></td><td class="mono" style="color:#fbbf24">word → count</td><td style="color:var(--muted)">Term frequency map for keyword scoring</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">scores (cat)</td><td><span class="badge" style="background:#06b6d420;color:#67e8f9">dict[str,int]</span></td><td class="mono" style="color:#fbbf24">domain → hit count</td><td style="color:var(--muted)">Category keyword match scores</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">s_summary</td><td><span class="badge" style="background:#22c55e20;color:#86efac">float</span></td><td class="mono" style="color:#fbbf24">SequenceMatcher.ratio()</td><td style="color:var(--muted)">Fuzzy score on 3-sentence summary</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">s_distilled</td><td><span class="badge" style="background:#22c55e20;color:#86efac">float</span></td><td class="mono" style="color:#fbbf24">hits / len(q_words)</td><td style="color:var(--muted)">Keyword overlap ratio</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">s_raw</td><td><span class="badge" style="background:#22c55e20;color:#86efac">float</span></td><td class="mono" style="color:#fbbf24">SequenceMatcher.ratio()</td><td style="color:var(--muted)">Fuzzy score on first 500 chars of raw</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">combined</td><td><span class="badge" style="background:#22c55e20;color:#86efac">float</span></td><td class="mono" style="color:#fbbf24">0.4+0.4+0.2 weighted sum</td><td style="color:var(--muted)">Final composite retrieval score</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">q_words</td><td><span class="badge" style="background:#a855f720;color:#d8b4fe">set[str]</span></td><td class="mono" style="color:#fbbf24">re.findall(≥3 chars)</td><td style="color:var(--muted)">Query tokens for keyword matching</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">hits</td><td><span class="badge" style="background:#a855f720;color:#d8b4fe">set[str]</span></td><td class="mono" style="color:#fbbf24">q_words & set(keywords)</td><td style="color:var(--muted)">Intersection of query tokens and distilled</td></tr>
+          <tr><td class="mono" style="color:#67e8f9">raw_preview</td><td><span class="badge" style="background:#f9731620;color:#fdba74">str</span></td><td class="mono" style="color:#fbbf24">raw[:300] + "..."</td><td style="color:var(--muted)">Truncated preview in result object</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ══ SECTION 4 · LORA FINE-TUNING PIPELINE ════════════ -->
+  <div class="section">
+    <div class="section-label" style="color:#c084fc">🤖 Part 2 — LoRA Fine-Tuning Pipeline (colab_training_standalone.py)</div>
+
+    <div class="train-flow" style="margin-bottom:28px">
+      <div class="train-node" style="background:#3b82f615;border-color:#3b82f650">
+        <div class="train-icon">📊</div>
+        <div class="train-label" style="color:#60a5fa">load_gsm8k()</div>
+        <div class="train-sub">openai/gsm8k<br>3000 train / 1000 eval<br>seed=42</div>
+      </div>
+      <div class="train-arrow" style="color:#3b82f6">→</div>
+      <div class="train-node" style="background:#06b6d415;border-color:#06b6d450">
+        <div class="train-icon">✏️</div>
+        <div class="train-label" style="color:#22d3ee">format_sample()</div>
+        <div class="train-sub">Question: {q}<br>Step-by-step:<br>{answer}</div>
+      </div>
+      <div class="train-arrow" style="color:#06b6d4">→</div>
+      <div class="train-node" style="background:#14b8a615;border-color:#14b8a650">
+        <div class="train-icon">🔤</div>
+        <div class="train-label" style="color:#2dd4bf">build_tokenizer()</div>
+        <div class="train-sub">LLaMA-3.2-1B<br>pad = eos_token<br>trust_remote_code</div>
+      </div>
+      <div class="train-arrow" style="color:#14b8a6">→</div>
+      <div class="train-node" style="background:#6366f115;border-color:#6366f150">
+        <div class="train-icon">🧊</div>
+        <div class="train-label" style="color:#a5b4fc">load_model()</div>
+        <div class="train-sub">4-bit NF4 BnB<br>fp16 compute<br>double quant</div>
+      </div>
+      <div class="train-arrow" style="color:#6366f1">→</div>
+      <div class="train-node glow-indigo" style="background:#a855f715;border-color:#a855f750">
+        <div class="train-icon">🔧</div>
+        <div class="train-label" style="color:#c084fc">LoRA Wrap</div>
+        <div class="train-sub">r=16, α=32<br>q_proj+v_proj<br>drop=0.05</div>
+      </div>
+      <div class="train-arrow" style="color:#a855f7">→</div>
+      <div class="train-node" style="background:#ec489915;border-color:#ec489950">
+        <div class="train-icon">🏋️</div>
+        <div class="train-label" style="color:#f472b6">SFTTrainer</div>
+        <div class="train-sub">3 epochs, lr=2e-4<br>batch=4, accum=4<br>max_seq=512</div>
+      </div>
+      <div class="train-arrow" style="color:#ec4899">→</div>
+      <div class="train-node" style="background:#f9731615;border-color:#f9731650">
+        <div class="train-icon">📈</div>
+        <div class="train-label" style="color:#fb923c">evaluate()</div>
+        <div class="train-sub">100 samples<br>exact match<br>→ accuracy: float</div>
+      </div>
+    </div>
+
+    <!-- Config blocks -->
+    <div class="config-grid">
+      <!-- LoRA -->
+      <div class="config-block" style="background:#a855f708;border-color:#a855f730">
+        <div class="config-block-title" style="color:#c084fc">⚗️ LoraConfig</div>
+        <div class="config-row"><span class="config-key">r (rank)</span><span class="config-val" style="color:#fbbf24">16</span></div>
+        <div class="config-row"><span class="config-key">lora_alpha</span><span class="config-val" style="color:#fbbf24">32</span></div>
+        <div class="config-row"><span class="config-key">target_modules</span><span class="config-val" style="color:#67e8f9">q_proj, v_proj</span></div>
+        <div class="config-row"><span class="config-key">lora_dropout</span><span class="config-val" style="color:#fbbf24">0.05</span></div>
+        <div class="config-row"><span class="config-key">bias</span><span class="config-val" style="color:#86efac">"none"</span></div>
+        <div class="config-row"><span class="config-key">task_type</span><span class="config-val" style="color:#c084fc">CAUSAL_LM</span></div>
+      </div>
+      <!-- Training Args -->
+      <div class="config-block" style="background:#ec489908;border-color:#ec489930">
+        <div class="config-block-title" style="color:#f472b6">🏋️ TrainingArguments</div>
+        <div class="config-row"><span class="config-key">num_train_epochs</span><span class="config-val" style="color:#fbbf24">3</span></div>
+        <div class="config-row"><span class="config-key">batch_size / device</span><span class="config-val" style="color:#fbbf24">4</span></div>
+        <div class="config-row"><span class="config-key">grad_accum_steps</span><span class="config-val" style="color:#fbbf24">4 (eff. 16)</span></div>
+        <div class="config-row"><span class="config-key">learning_rate</span><span class="config-val" style="color:#fbbf24">2e-4</span></div>
+        <div class="config-row"><span class="config-key">warmup_steps</span><span class="config-val" style="color:#fbbf24">100</span></div>
+        <div class="config-row"><span class="config-key">fp16</span><span class="config-val" style="color:#86efac">True</span></div>
+        <div class="config-row"><span class="config-key">eval_steps</span><span class="config-val" style="color:#fbbf24">200</span></div>
+        <div class="config-row"><span class="config-key">save_steps</span><span class="config-val" style="color:#fbbf24">500</span></div>
+        <div class="config-row"><span class="config-key">save_total_limit</span><span class="config-val" style="color:#fbbf24">2</span></div>
+        <div class="config-row"><span class="config-key">load_best_at_end</span><span class="config-val" style="color:#86efac">True</span></div>
+        <div class="config-row"><span class="config-key">report_to</span><span class="config-val" style="color:#86efac">"none"</span></div>
+      </div>
+      <!-- BnB -->
+      <div class="config-block" style="background:#06b6d408;border-color:#06b6d430">
+        <div class="config-block-title" style="color:#22d3ee">🧊 BitsAndBytesConfig</div>
+        <div class="config-row"><span class="config-key">load_in_4bit</span><span class="config-val" style="color:#86efac">True</span></div>
+        <div class="config-row"><span class="config-key">bnb_4bit_quant_type</span><span class="config-val" style="color:#67e8f9">"nf4"</span></div>
+        <div class="config-row"><span class="config-key">compute_dtype</span><span class="config-val" style="color:#67e8f9">torch.float16</span></div>
+        <div class="config-row"><span class="config-key">use_double_quant</span><span class="config-val" style="color:#86efac">True</span></div>
+        <div style="margin-top:16px" class="config-block-title" style="color:#22d3ee">🔧 Model Overrides</div>
+        <div class="config-row"><span class="config-key">model.config.use_cache</span><span class="config-val" style="color:#f87171">False</span></div>
+        <div class="config-row"><span class="config-key">pretraining_tp</span><span class="config-val" style="color:#fbbf24">1</span></div>
+        <div style="margin-top:16px" class="config-block-title" style="color:#22d3ee">📊 evaluate() vars</div>
+        <div class="config-row"><span class="config-key">n_samples</span><span class="config-val" style="color:#fbbf24">100</span></div>
+        <div class="config-row"><span class="config-key">max_new_tokens</span><span class="config-val" style="color:#fbbf24">256</span></div>
+        <div class="config-row"><span class="config-key">do_sample</span><span class="config-val" style="color:#f87171">False</span></div>
+        <div class="config-row"><span class="config-key">accuracy</span><span class="config-val" style="color:#67e8f9">correct / total</span></div>
+      </div>
+    </div>
+
+    <!-- Global constants row -->
+    <div style="margin-top:16px">
+      <div class="card" style="border-color:#eab30830;background:#eab30808">
+        <div style="font-size:.78rem;font-weight:700;color:#fbbf24;margin-bottom:12px;text-transform:uppercase;letter-spacing:.1em">📌 Global Constants</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <div style="padding:8px 16px;border-radius:8px;border:1px solid #eab30830;background:#eab30810;font-family:'JetBrains Mono',monospace;font-size:.78rem">
+            <span style="color:var(--muted)">MODEL_ID</span><br>
+            <span style="color:#fbbf24">"meta-llama/Llama-3.2-1B"</span>
+          </div>
+          <div style="padding:8px 16px;border-radius:8px;border:1px solid #eab30830;background:#eab30810;font-family:'JetBrains Mono',monospace;font-size:.78rem">
+            <span style="color:var(--muted)">TRAIN_SAMPLES</span><br>
+            <span style="color:#fbbf24">3000</span>
+          </div>
+          <div style="padding:8px 16px;border-radius:8px;border:1px solid #eab30830;background:#eab30810;font-family:'JetBrains Mono',monospace;font-size:.78rem">
+            <span style="color:var(--muted)">EVAL_SAMPLES</span><br>
+            <span style="color:#fbbf24">1000</span>
+          </div>
+          <div style="padding:8px 16px;border-radius:8px;border:1px solid #eab30830;background:#eab30810;font-family:'JetBrains Mono',monospace;font-size:.78rem">
+            <span style="color:var(--muted)">MAX_SEQ_LEN</span><br>
+            <span style="color:#fbbf24">512</span>
+          </div>
+          <div style="padding:8px 16px;border-radius:8px;border:1px solid #eab30830;background:#eab30810;font-family:'JetBrains Mono',monospace;font-size:.78rem">
+            <span style="color:var(--muted)">OUTPUT_DIR</span><br>
+            <span style="color:#fbbf24">"./gsm8k_lora_output"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ SECTION 5 · REASONING ADAPTER ════════════════════ -->
+  <div class="section">
+    <div class="section-label" style="color:#fb923c">🧠 Bonus — Reasoning Adapter Domain Router</div>
+
+    <div class="router-grid">
+      <!-- Left: Domain detection -->
+      <div>
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Domain Keyword Banks</div>
+        <div class="domain-cards">
+          <div class="domain-card" style="background:#3b82f610;border-color:#3b82f640">
+            <div style="font-size:22px">📐</div>
+            <div style="flex:1">
+              <div style="font-weight:700;color:#60a5fa;font-size:.82rem;margin-bottom:5px">MATH (17 keywords)</div>
+              <div class="domain-kw">
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">calculate</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">equation</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">solve</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">integral</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">derivative</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">algebra</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">matrix</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">vector</span>
+                <span class="kw-chip" style="background:#3b82f620;color:#93c5fd">formula</span>
+              </div>
+            </div>
+          </div>
+          <div class="domain-card" style="background:#f9731610;border-color:#f9731640">
+            <div style="font-size:22px">⚖️</div>
+            <div style="flex:1">
+              <div style="font-weight:700;color:#fb923c;font-size:.82rem;margin-bottom:5px">LEGAL (17 keywords)</div>
+              <div class="domain-kw">
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">law</span>
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">contract</span>
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">jurisdiction</span>
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">statute</span>
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">gdpr</span>
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">patent</span>
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">liability</span>
+                <span class="kw-chip" style="background:#f9731620;color:#fdba74">court</span>
+              </div>
+            </div>
+          </div>
+          <div class="domain-card" style="background:#22c55e10;border-color:#22c55e40">
+            <div style="font-size:22px">🧪</div>
+            <div style="flex:1">
+              <div style="font-weight:700;color:#4ade80;font-size:.82rem;margin-bottom:5px">SCIENCE (16 keywords)</div>
+              <div class="domain-kw">
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">molecule</span>
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">hypothesis</span>
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">quantum</span>
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">dna</span>
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">evolution</span>
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">energy</span>
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">cell</span>
+                <span class="kw-chip" style="background:#22c55e20;color:#86efac">atom</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Router -->
+      <div class="router-center">
+        <div style="color:var(--muted);font-size:.65rem;font-family:'JetBrains Mono',monospace;text-align:center">query: str</div>
+        <div style="font-size:28px;color:#6366f1;animation: bounce-arrow 1.2s ease-in-out infinite">↓</div>
+        <div class="router-box glow-indigo" style="background:#6366f115;border-color:#6366f160">
+          <div style="font-size:28px;margin-bottom:8px">🧠</div>
+          <div class="router-title" style="color:#a5b4fc">ReasoningAdapter</div>
+          <div class="router-sub">.route(query)</div>
+          <div style="margin:10px 0;height:1px;background:var(--border)"></div>
+          <div class="router-sub" style="font-size:.65rem">detect_type()</div>
+          <div class="router-sub" style="font-size:.65rem">keyword scoring loop</div>
+          <div class="router-sub" style="font-size:.65rem">max(scores, key=scores.get)</div>
+          <div style="margin:10px 0;height:1px;background:var(--border)"></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:.65rem;font-family:'JetBrains Mono',monospace;color:#a5b4fc">→ domain: str</div>
+            <div style="font-size:.65rem;font-family:'JetBrains Mono',monospace;color:#a5b4fc">→ confidence: float</div>
+          </div>
+        </div>
+        <div style="font-size:28px;color:#6366f1;animation: bounce-arrow 1.2s ease-in-out infinite">↓</div>
+        <div style="color:var(--muted);font-size:.65rem;font-family:'JetBrains Mono',monospace;text-align:center">dispatch[domain](query)</div>
+      </div>
+
+      <!-- Right: Dispatch handlers -->
+      <div>
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Dispatch Handlers</div>
+        <div class="dispatch-cards">
+          <div class="dispatch-card" style="background:#3b82f610;border-color:#3b82f640">
+            <div style="font-weight:700;color:#60a5fa;font-size:.82rem">math_reasoner(query)</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace">→ BODMAS → Verify result</div>
+          </div>
+          <div class="dispatch-card" style="background:#f9731610;border-color:#f9731640">
+            <div style="font-weight:700;color:#fb923c;font-size:.82rem">legal_reasoner(query)</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace">→ clauses → jurisdiction → statute</div>
+          </div>
+          <div class="dispatch-card" style="background:#22c55e10;border-color:#22c55e40">
+            <div style="font-weight:700;color:#4ade80;font-size:.82rem">science_reasoner(query)</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace">→ claim → evidence → hypothesis</div>
+          </div>
+          <div class="dispatch-card" style="background:#6366f110;border-color:#6366f140">
+            <div style="font-weight:700;color:#a5b4fc;font-size:.82rem">general_reasoner(query)</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace">→ semantic RAG retrieval</div>
+          </div>
+          <div style="border-radius:10px;border:1px solid #6366f140;padding:10px 16px;background:#6366f108;margin-top:4px">
+            <div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:6px">Return dict</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:#a5b4fc;line-height:1.8">
+              {<br>
+              &nbsp;&nbsp;query: str,<br>
+              &nbsp;&nbsp;domain: str,<br>
+              &nbsp;&nbsp;confidence: float,<br>
+              &nbsp;&nbsp;response: str<br>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ SECTION 6 · ADAPTER CONFIG ═══════════════════════ -->
+  <div class="section">
+    <div class="section-label" style="color:#f472b6">📄 adapter_config.json — Saved LoRA Weights (distilgpt2)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="config-block" style="background:#ec489908;border-color:#ec489930">
+        <div class="config-block-title" style="color:#f472b6">Core Config</div>
+        <div class="config-row"><span class="config-key">base_model</span><span class="config-val" style="color:#67e8f9">"distilgpt2"</span></div>
+        <div class="config-row"><span class="config-key">peft_type</span><span class="config-val" style="color:#c084fc">"LORA"</span></div>
+        <div class="config-row"><span class="config-key">task_type</span><span class="config-val" style="color:#c084fc">"CAUSAL_LM"</span></div>
+        <div class="config-row"><span class="config-key">r (rank)</span><span class="config-val" style="color:#fbbf24">8</span></div>
+        <div class="config-row"><span class="config-key">lora_alpha</span><span class="config-val" style="color:#fbbf24">16</span></div>
+        <div class="config-row"><span class="config-key">lora_dropout</span><span class="config-val" style="color:#fbbf24">0.1</span></div>
+        <div class="config-row"><span class="config-key">bias</span><span class="config-val" style="color:#86efac">"none"</span></div>
+        <div class="config-row"><span class="config-key">target_modules</span><span class="config-val" style="color:#67e8f9">["c_attn"]</span></div>
+      </div>
+      <div class="config-block" style="background:#a855f708;border-color:#a855f730">
+        <div class="config-block-title" style="color:#c084fc">Flags & Advanced</div>
+        <div class="config-row"><span class="config-key">fan_in_fan_out</span><span class="config-val" style="color:#86efac">true</span></div>
+        <div class="config-row"><span class="config-key">inference_mode</span><span class="config-val" style="color:#86efac">true</span></div>
+        <div class="config-row"><span class="config-key">init_lora_weights</span><span class="config-val" style="color:#86efac">true</span></div>
+        <div class="config-row"><span class="config-key">use_dora</span><span class="config-val" style="color:#f87171">false</span></div>
+        <div class="config-row"><span class="config-key">use_rslora</span><span class="config-val" style="color:#f87171">false</span></div>
+        <div class="config-row"><span class="config-key">layer_replication</span><span class="config-val" style="color:var(--muted)">null</span></div>
+        <div class="config-row"><span class="config-key">layers_to_transform</span><span class="config-val" style="color:var(--muted)">null</span></div>
+        <div class="config-row"><span class="config-key">modules_to_save</span><span class="config-val" style="color:var(--muted)">null</span></div>
+        <div class="config-row"><span class="config-key">loftq_config</span><span class="config-val" style="color:var(--muted)">{} (disabled)</span></div>
+        <div class="config-row"><span class="config-key">alpha_pattern</span><span class="config-val" style="color:var(--muted)">{} (uniform)</span></div>
+        <div class="config-row"><span class="config-key">rank_pattern</span><span class="config-val" style="color:var(--muted)">{} (uniform)</span></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:12px 18px;border-radius:10px;border:1px solid #eab30840;background:#eab30808;font-size:.75rem;color:#fbbf24">
+      ⚠️ <strong>Note:</strong> <span style="color:var(--muted)">This adapter (r=8, distilgpt2, c_attn) differs from the training script (r=16, LLaMA-3.2-1B, q_proj+v_proj) — these are two separate experiments.</span>
+    </div>
+  </div>
+
+
+  <!-- ══ SECTION 7 · NUMERICAL CONSTANTS SUMMARY ══════════ -->
+  <div class="section">
+    <div class="section-label" style="color:#fbbf24">🔢 All Numerical Constants — Master Reference</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <!-- Ingestion -->
+      <div class="card" style="border-color:#3b82f630">
+        <div style="font-size:.78rem;font-weight:700;color:#60a5fa;margin-bottom:12px">📚 document_ingestion.py</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">window_size</span><span class="mono" style="color:#fbbf24">2500 chars</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">overlap</span><span class="mono" style="color:#fbbf24">500 chars</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">n_sentences</span><span class="mono" style="color:#fbbf24">3</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">top_n (distilled)</span><span class="mono" style="color:#fbbf24">8 keywords</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">top_k (retrieve)</span><span class="mono" style="color:#fbbf24">3 results</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">w_summary</span><span class="mono" style="color:#22d3ee">0.4</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">w_distilled</span><span class="mono" style="color:#c084fc">0.4</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">w_raw</span><span class="mono" style="color:#fb923c">0.2</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0">
+            <span class="mono" style="color:var(--muted)">raw_preview</span><span class="mono" style="color:#fbbf24">300 chars</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Training -->
+      <div class="card" style="border-color:#a855f730">
+        <div style="font-size:.78rem;font-weight:700;color:#c084fc;margin-bottom:12px">🤖 colab_training.py</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">TRAIN_SAMPLES</span><span class="mono" style="color:#fbbf24">3000</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">EVAL_SAMPLES</span><span class="mono" style="color:#fbbf24">1000</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">MAX_SEQ_LEN</span><span class="mono" style="color:#fbbf24">512 tokens</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">LoRA r</span><span class="mono" style="color:#fbbf24">16</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">lora_alpha</span><span class="mono" style="color:#fbbf24">32</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">lora_dropout</span><span class="mono" style="color:#fbbf24">0.05</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">epochs</span><span class="mono" style="color:#fbbf24">3</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">batch_size (eff)</span><span class="mono" style="color:#fbbf24">4 × 4 = 16</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">learning_rate</span><span class="mono" style="color:#fbbf24">2e-4</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">warmup_steps</span><span class="mono" style="color:#fbbf24">100</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">eval_steps</span><span class="mono" style="color:#fbbf24">200</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">save_steps</span><span class="mono" style="color:#fbbf24">500</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">save_total_limit</span><span class="mono" style="color:#fbbf24">2</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">n_eval_samples</span><span class="mono" style="color:#fbbf24">100</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0">
+            <span class="mono" style="color:var(--muted)">max_new_tokens</span><span class="mono" style="color:#fbbf24">256</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adapter -->
+      <div class="card" style="border-color:#ec489930">
+        <div style="font-size:.78rem;font-weight:700;color:#f472b6;margin-bottom:12px">📄 adapter_config.json</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">r (rank)</span><span class="mono" style="color:#fbbf24">8</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">lora_alpha</span><span class="mono" style="color:#fbbf24">16</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">lora_dropout</span><span class="mono" style="color:#fbbf24">0.1</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">reasoning_adapter</span><span></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">math keywords</span><span class="mono" style="color:#fbbf24">17</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">legal keywords</span><span class="mono" style="color:#fbbf24">17</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="color:var(--muted)">science keywords</span><span class="mono" style="color:#fbbf24">16</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;padding:5px 0">
+            <span class="mono" style="color:var(--muted)">confidence fallback</span><span class="mono" style="color:#fbbf24">0.0 → general</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;color:var(--muted);font-size:.75rem;padding-top:20px;border-top:1px solid var(--border)">
+    Vexoo Labs · AI Engineer Assignment · Architecture Diagram · Generated 2026
+  </div>
+
+</div>
+
+<script>
+// Starfield
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+function initStars(){
+  stars = [];
+  for(let i=0;i<160;i++){
+    stars.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*1.5+0.2,
+      a: Math.random(),
+      s: Math.random()*0.003+0.001
+    });
+  }
+}
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s=>{
+    s.a += s.s;
+    if(s.a>1||s.a<0) s.s*=-1;
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+window.addEventListener('resize',()=>{ resize(); initStars(); });
+resize(); initStars(); drawStars();
+</script>
+</body>
+</html>

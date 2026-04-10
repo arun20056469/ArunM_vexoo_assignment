@@ -1,0 +1,66 @@
+===== PART 1 OUTPUT =====
+Query: What is gradient descent?
+
+Top Result:
+Category: Technology
+Summary: Gradient descent optimizes model weights by minimizing loss.
+Keywords: gradient, descent, optimize, weights
+
+===== PART 2 OUTPUT =====
+Training Loss:
+Step 50 → 3.83
+Step 500 → 3.02
+Step 1000 → 2.93
+
+Final Accuracy:
+0.28
+
+===== BONUS OUTPUT =====
+Query: What is 25 + 10?
+Detected: Math
+Response: Step-by-step reasoning module activated
+
+
+
+PS D:\Downloads\vexoo_assignment> python reasoning_adapter.py
+=================================================================
+REASONING ADAPTER — DEMO
+=================================================================
+
+Query      : What is the derivative of x squared plus 3x?
+Domain     : MATH  (confidence: 1.0)
+Response   :
+[MATH MODULE]
+Query     : What is the derivative of x squared plus 3x?
+Approach  : Step-by-step numeric decomposition
+Steps     : [1] Parse numbers/operators → [2] Apply BODMAS → [3] Verify result
+Simulated Answer: <run symbolic solver here>
+-----------------------------------------------------------------
+
+Query      : Is a verbal contract legally binding in India?
+Domain     : LEGAL  (confidence: 2.0)
+Response   :
+[LEGAL MODULE]
+Query     : Is a verbal contract legally binding in India?
+Approach  : Retrieve relevant clauses → match jurisdiction → cite statute
+Simulated Answer: <run legal retrieval + citation engine here>
+-----------------------------------------------------------------
+
+Query      : How does DNA replication work in eukaryotic cells?
+Domain     : SCIENCE  (confidence: 2.0)
+Response   :
+[SCIENCE MODULE]
+Query     : How does DNA replication work in eukaryotic cells?
+Approach  : Identify claim → retrieve evidence → evaluate hypothesis
+Simulated Answer: <run scientific reasoning chain here>
+-----------------------------------------------------------------
+
+Query      : Tell me about attention mechanisms in transformers.
+Domain     : GENERAL  (confidence: 0.0)
+Response   :
+[GENERAL MODULE]
+Query     : Tell me about attention mechanisms in transformers.
+Approach  : Semantic similarity search over knowledge pyramid
+Simulated Answer: <run RAG retrieval here>
+-----------------------------------------------------------------
+PS D:\Downloads\vexoo_assignment> 
